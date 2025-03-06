@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import {ApiResponse} from "../utils/ApiResponse.js"
+import {ApiResponse} from "../utils/ApiResponse.js";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 
@@ -170,11 +170,26 @@ const refreshTheAccessToken = asyncHandler( async (req, res) => {
 )
 
 const logoutUser = asyncHandler(async (req, res) => {
-    // res
-    // .clearCookie("accessToken")
-    // .clearCookie("refreshToken")
-    // .status(200)
-    // .json(new ApiResponse(200, null, "User logged out successfully"));
+    await User.findByIdAndUpdate(req.user._id,
+        {
+            $set:{
+                refrehToken: undefined,
+            }
+        },
+        {new:true}
+    )
+
+    const option = {
+        httpOnly: true,
+        secure:process.env.NODE_ENV === "production",
+    }
+
+    return res
+    .clearCookie("accessToken",option)
+    .clearCookie("refreshToken",option)
+    .status(200)
+    .json(new ApiResponse(200, null, "User logged out successfully"));
+    
 });
 
 export {
